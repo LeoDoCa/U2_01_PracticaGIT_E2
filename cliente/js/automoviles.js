@@ -293,7 +293,7 @@ async function cargarAutomoviles() {
 
     try {
         const response = await fetch(`${BASEURL}`); 
-        automoviles = await response.json(); // Asigna los automóviles a la variable global
+        automoviles = await response.json(); 
         console.log('Automóviles cargados:', automoviles);
         automoviles.forEach(auto => {
             contenedor.appendChild(crearTarjetaAuto(auto));
@@ -303,7 +303,7 @@ async function cargarAutomoviles() {
     } catch (error) {
         console.error('Error al cargar automóviles:', error);
         contenedor.innerHTML = '<p>Error al cargar los automóviles. Intenta de nuevo más tarde.</p>';
-        automoviles = []; // Asegúrate de que automoviles esté vacío en caso de error
+        automoviles = []; 
     }
 }
 
