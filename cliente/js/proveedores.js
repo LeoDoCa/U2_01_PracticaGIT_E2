@@ -52,7 +52,7 @@ const proveedores = [
   
       div.innerHTML = `
         <div class="card w-100 h-100 border-0 shadow-sm">
-          <div class="card-header bg-secondary text-white">
+          <div class="card-header bg-terrary">
             <h5 class="card-title mb-0">${prov.nombre}</h5>
           </div>
          <div class="d-flex flex-wrap justify-content- align-items-center p-3">
