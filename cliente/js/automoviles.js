@@ -5,14 +5,13 @@ async function cargarProveedoresEnFormularios() {
     const selectAgregar = document.getElementById('proveedor');
     const selectEditar = document.getElementById('editProveedor');
 
-    // Limpia los selects
     selectAgregar.innerHTML = '<option value="" selected disabled>Seleccione un proveedor</option>';
     selectEditar.innerHTML = '<option value="" selected disabled>Seleccione un proveedor</option>';
 
     try {
         const response = await fetch(`${BASEURL_PROVEEDORES}`);
         const proveedores = await response.json();
-console.log(proveedores);
+        console.log(proveedores);
 
         proveedores.forEach(proveedor => {
             const optionAgregar = document.createElement('option');
@@ -30,94 +29,89 @@ console.log(proveedores);
     }
 }
 
-// Función para guardar un nuevo automóvil
-function guardarNuevoAutomovil() {
-    // Obtener valores del formulario
+async function guardarNuevoAutomovil() {
     const marca = document.getElementById('marca').value;
     const modelo = document.getElementById('modelo').value;
     const color = document.getElementById('color').value;
-    const placa = document.getElementById('placa').value;
+    const numPlacas = document.getElementById('placa').value;
     const proveedorId = parseInt(document.getElementById('proveedor').value);
-    
-    // Validación básica
-    if (!marca || !modelo || !color || !placa || isNaN(proveedorId)) {
+
+    if (!marca || !modelo || !color || !numPlacas || isNaN(proveedorId)) {
         alert('Por favor, complete todos los campos');
         return;
     }
-    
-    // Buscar el proveedor seleccionado
+
     const proveedor = proveedores.find(p => p.id === proveedorId);
     if (!proveedor) {
         alert('Proveedor no encontrado');
         return;
     }
-    
-    // Crear nuevo ID (en un backend real, esto lo haría el servidor)
-    const nuevoId = automoviles.length > 0 
-        ? Math.max(...automoviles.map(a => a.id)) + 1 
-        : 1;
-    
-    // Crear nuevo objeto automóvil
+
     const nuevoAuto = {
-        id: nuevoId,
         marca,
         modelo,
         color,
-        placa,
+        numPlacas,
         proveedor
     };
-    
-    // Agregar a la lista de automóviles
-    automoviles.push(nuevoAuto);
-    
-    // Recargar la vista de automóviles
-    cargarAutomoviles();
-    
-    // Cerrar el modal y limpiar el formulario
-    document.getElementById('agregarAutoForm').reset();
-    document.getElementById('agregarAutoModal').querySelector('.btn-close').click();
-    
-    // Notificar al usuario
-    alert('Automóvil guardado correctamente');
+
+    try {
+        const response = await fetch(BASEURL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(nuevoAuto)
+        });
+
+        if (!response.ok) {
+            throw new Error('Error al guardar el automóvil');
+        }
+
+        await cargarAutomoviles();
+
+        document.getElementById('agregarAutoForm').reset();
+        document.getElementById('agregarAutoModal').querySelector('.btn-close').click();
+
+        alert('Automóvil guardado correctamente');
+    } catch (error) {
+        console.error('Error al guardar el automóvil:', error);
+        alert('Ocurrió un error al guardar el automóvil. Inténtalo de nuevo.');
+    }
 }
 
-// Función para actualizar un automóvil existente
+
 async function actualizarAutomovil() {
-    // Obtener el ID del automóvil a actualizar
     const autoId = parseInt(document.getElementById('editarAutoForm').dataset.autoId);
     if (isNaN(autoId)) {
         alert('Error: No se ha seleccionado un automóvil');
         return;
     }
 
-    // Obtener valores del formulario
     const marca = document.getElementById('editMarca').value;
     const modelo = document.getElementById('editModelo').value;
     const color = document.getElementById('editColor').value;
     const numPlacas = document.getElementById('editPlaca').value;
     const proveedorId = parseInt(document.getElementById('editProveedor').value);
 
-    // Validación básica
     if (!marca || !modelo || !color || !numPlacas || isNaN(proveedorId)) {
         alert('Por favor, complete todos los campos');
         return;
     }
 
-    // Buscar el proveedor seleccionado
     const proveedor = proveedores.find(p => p.id === proveedorId);
     if (!proveedor) {
         alert('Proveedor no encontrado');
         return;
     }
 
-    // Construir objeto para actualizar
     const autoActualizado = {
         id: autoId,
         marca,
         modelo,
         color,
         numPlacas,
-        proveedor  // se envía el objeto proveedor completo
+        proveedor
     };
 
     try {
@@ -133,10 +127,8 @@ async function actualizarAutomovil() {
             throw new Error('No se pudo actualizar el automóvil');
         }
 
-        // Recargar lista de autos
         await cargarAutomoviles();
 
-        // Cerrar el modal
         document.getElementById('editarAutoModal').querySelector('.btn-close').click();
 
         alert('Automóvil actualizado correctamente');
@@ -163,15 +155,12 @@ async function eliminarAutomovil() {
             throw new Error('Error al eliminar el automóvil');
         }
 
-        // Recargar la vista de automóviles
-        await cargarAutomoviles(); // Asumiendo que esta función ya hace fetch de la lista actualizada
+        await cargarAutomoviles();
 
-        // Cerrar el modal
         document.getElementById('eliminarAutoModal').querySelector('.btn-close').click();
 
-        // Notificar al usuario
         alert('Automóvil eliminado correctamente');
-        
+
     } catch (error) {
         console.error('Error al eliminar el automóvil:', error);
         alert('Hubo un error al intentar eliminar el automóvil.');
@@ -188,18 +177,15 @@ async function cargarDatosParaEditar(autoId) {
 
         const auto = await response.json();
 
-        // Cargar los datos en el formulario de edición
         document.getElementById('editMarca').value = auto.marca;
         document.getElementById('editModelo').value = auto.modelo;
         document.getElementById('editColor').value = auto.color;
         document.getElementById('editPlaca').value = auto.numPlacas;
 
-        // Verifica si el objeto auto.proveedor existe y tiene ID
         if (auto.proveedor && auto.proveedor.id) {
             document.getElementById('editProveedor').value = auto.proveedor.id;
         }
 
-        // Guardar el ID del auto actual para la actualización
         document.getElementById('editarAutoForm').dataset.autoId = autoId;
 
     } catch (error) {
@@ -218,11 +204,9 @@ async function cargarDatosParaEliminar(autoId) {
 
         const auto = await response.json();
 
-        // Mostrar información del auto a eliminar
         document.getElementById('deleteModelText').textContent = `${auto.marca} ${auto.modelo}`;
         document.getElementById('deletePlacaText').textContent = auto.numPlacas;
 
-        // Guardar el ID del auto actual para la eliminación
         document.getElementById('eliminarAutoModal').dataset.autoId = autoId;
 
     } catch (error) {
@@ -230,130 +214,75 @@ async function cargarDatosParaEliminar(autoId) {
     }
 }
 
-// Función para cargar detalles del automóvil en el modal
-function cargarDetallesAuto(autoId) {
-    // Buscar el automóvil por ID
-    const auto = automoviles.find(a => a.id === autoId);
-    if (!auto) return;
-    
-    // Llenar los campos del modal con los detalles del auto
-    document.getElementById('detalleMarca').textContent = auto.marca;
-    document.getElementById('detalleModelo').textContent = auto.modelo;
-    document.getElementById('detalleColor').textContent = auto.color;
-    document.getElementById('detallePlaca').textContent = auto.placa;
-    
-    document.getElementById('detalleProveedorNombre').textContent = auto.proveedor.nombre;
-    document.getElementById('detalleProveedorDireccion').textContent = auto.proveedor.direccion;
-    document.getElementById('detalleProveedorTelefono').textContent = auto.proveedor.telefono;
-    document.getElementById('detalleProveedorEmail').textContent = auto.proveedor.email;
+async function cargarDetallesAuto(autoId) {
+    try {
+        const response = await fetch(`${BASEURL}${autoId}`);
+
+
+        if (!response.ok) {
+            throw new Error('Error al obtener detalles del automóvil');
+        }
+
+        const auto = await response.json();
+        console.log('Detalles del auto:', auto);
+        document.getElementById('detalleMarca').textContent = auto.marca;
+        document.getElementById('detalleModelo').textContent = auto.modelo;
+        document.getElementById('detalleColor').textContent = auto.color;
+        document.getElementById('detallePlaca').textContent = auto.numPlacas;
+
+        if (auto.proveedor) {
+            document.getElementById('detalleProveedorNombre').textContent = auto.proveedor.nombre || '';
+            document.getElementById('detalleProveedorDireccion').textContent = auto.proveedor.apellidos || '';
+            document.getElementById('detalleProveedorTelefono').textContent = auto.proveedor.telefono || '';
+            document.getElementById('detalleProveedorEmail').textContent = auto.proveedor.correo || '';
+        } else {
+            console.warn("El auto no tiene proveedor asignado.");
+        }
+
+    } catch (error) {
+        console.error('Error al cargar los detalles del auto:', error);
+    }
 }
 
 
-// Datos de ejemplo
 
-const automoviles = [
-    {
-        id: 1,
-        marca: 'Toyota',
-        modelo: 'Corolla',
-        color: 'Blanco',
-        placa: 'ABC-123',
-        proveedor: {
-            id: 1,
-            nombre: 'AutoMax',
-            direccion: 'Av. Principal #123',
-            telefono: '(123) 456-7890',
-            email: 'contacto@automax.com'
-        }
-    },
-    {
-        id: 2,
-        marca: 'Honda',
-        modelo: 'Civic',
-        color: 'Azul',
-        placa: 'XYZ-789',
-        proveedor: {
-            id: 2,
-            nombre: 'CarWorld',
-            direccion: 'Calle Central #456',
-            telefono: '(123) 555-8901',
-            email: 'info@carworld.com' 
-        }
-    },
-    {
-        id: 3,
-        marca: 'Nissan',
-        modelo: 'Sentra',
-        color: 'Negro',
-        placa: 'DEF-456',
-        proveedor: {
-            id: 3,
-            nombre: 'NissanPro',
-            direccion: 'Blvd. Norte #789',
-            telefono: '(123) 456-2345',
-            email: 'ventas@nissanpro.com'
-        }
-    }
-];
-
-// Lista de proveedores
-const proveedores = [
-    { id: 1, nombre: 'AutoMax', direccion: 'Av. Principal #123', telefono: '(123) 456-7890', email: 'contacto@automax.com' },
-    { id: 2, nombre: 'CarWorld', direccion: 'Calle Central #456', telefono: '(123) 555-8901', email: 'info@carworld.com' },
-    { id: 3, nombre: 'NissanPro', direccion: 'Blvd. Norte #789', telefono: '(123) 456-2345', email: 'ventas@nissanpro.com' },
-    { id: 4, nombre: 'Toyota Oficial', direccion: 'Avenida Sur #321', telefono: '(123) 777-9090', email: 'ventas@toyotaoficial.com' },
-    { id: 5, nombre: 'Honda Motors', direccion: 'Plaza Automotriz #567', telefono: '(123) 888-1234', email: 'servicio@hondamotors.com' }
-];
-
-// Esperar a que el DOM esté completamente cargado
-document.addEventListener('DOMContentLoaded', function() {
-    // Inicializar los eventos después de que el DOM esté cargado
+document.addEventListener('DOMContentLoaded', function () {
     inicializarEventos();
-    // Cargar automóviles desde los datos de ejemplo
     cargarAutomoviles();
-    // Cargar la lista de proveedores en los formularios
     cargarProveedoresEnFormularios();
 });
 
-// Función para inicializar todos los eventos
 function inicializarEventos() {
-    // Evento para el botón de guardar nuevo automóvil
-    document.getElementById('guardarAutoBtn').addEventListener('click', function() {
+    document.getElementById('guardarAutoBtn').addEventListener('click', function () {
         guardarNuevoAutomovil();
     });
 
-    // Evento para el botón de actualizar automóvil
-    document.getElementById('actualizarAutoBtn').addEventListener('click', function() {
+    document.getElementById('actualizarAutoBtn').addEventListener('click', function () {
         actualizarAutomovil();
     });
 
-    // Evento para el botón de eliminar automóvil
-    document.getElementById('confirmarEliminarBtn').addEventListener('click', function() {
+    document.getElementById('confirmarEliminarBtn').addEventListener('click', function () {
         eliminarAutomovil();
     });
 
-    // Búsqueda de automóviles por marca
-    document.getElementById('searchInput').addEventListener('input', function() {
+    document.getElementById('searchInput').addEventListener('input', function () {
         const searchText = this.value.toLowerCase();
         console.log('Buscando marca:', searchText);
-        
-        // Filtrar automóviles por marca
-        const autosFiltrados = automoviles.filter(auto => 
+
+        const autosFiltrados = automoviles.filter(auto =>
             auto.marca.toLowerCase().includes(searchText)
         );
-        
-        // Actualizar la visualización de automóviles
+
         actualizarVistaAutomoviles(autosFiltrados);
     });
 }
 
-// Función para cargar automóviles en la página
 async function cargarAutomoviles() {
     const contenedor = document.getElementById('contenedorAutos');
     contenedor.innerHTML = '';
 
     try {
-        const response = await fetch(`${BASEURL}`); // Asegúrate de definir esta constante
+        const response = await fetch(`${BASEURL}`); 
         const automoviles = await response.json();
         console.log('Automóviles cargados:', automoviles);
         automoviles.forEach(auto => {
@@ -368,13 +297,10 @@ async function cargarAutomoviles() {
 }
 
 
-// Función para actualizar la vista de automóviles según el filtro
 function actualizarVistaAutomoviles(autos) {
-    // Limpiar el contenedor de automóviles
     const contenedor = document.getElementById('contenedorAutos');
     contenedor.innerHTML = '';
-    
-    // Si no hay resultados, mostrar mensaje
+
     if (autos.length === 0) {
         const noResultados = document.createElement('div');
         noResultados.className = 'col-12 text-center my-5';
@@ -382,18 +308,16 @@ function actualizarVistaAutomoviles(autos) {
         contenedor.appendChild(noResultados);
         return;
     }
-    
-    // Cargar cada automóvil filtrado en el contenedor
+
     autos.forEach(auto => {
         contenedor.appendChild(crearTarjetaAuto(auto));
     });
 }
 
-// Función para crear una tarjeta de automóvil
 function crearTarjetaAuto(auto) {
     const columna = document.createElement('div');
     columna.className = 'col';
-    
+
     columna.innerHTML = `
         <div class="card h-100 border-0 shadow-sm">
             <div class="card-header bg-primary text-white">
@@ -423,6 +347,6 @@ function crearTarjetaAuto(auto) {
             </div>
         </div>
     `;
-    
+
     return columna;
 }
