@@ -1,5 +1,6 @@
 package mx.edu.utez.U2_01_PracticaGIT.Model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -24,12 +25,8 @@ public class Proveedor {
     private String telefono;
     private String correo;
 
-    /*
-    @OneToMany(mappedBy = "provedor")
-    private Automovil automovil;
 
-     */
-    @JsonManagedReference
+    @JsonIgnoreProperties({"proveedor"})
     @OneToMany(mappedBy = "proveedor", cascade = CascadeType.ALL)
     private List<Automovil> automoviles = new ArrayList<>();
 

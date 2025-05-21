@@ -1,5 +1,6 @@
 const BASEURL = 'http://localhost:8080/api/automoviles/';
 const BASEURL_PROVEEDORES = 'http://localhost:8080/api/proveedor/';
+let listaProveedores = []; // Variable global
 
 async function cargarProveedoresEnFormularios() {
     const selectAgregar = document.getElementById('proveedor');
@@ -11,7 +12,7 @@ async function cargarProveedoresEnFormularios() {
     try {
         const response = await fetch(`${BASEURL_PROVEEDORES}`);
         const proveedores = await response.json();
-        console.log(proveedores);
+        listaProveedores = proveedores; // Guardar en la variable global
 
         proveedores.forEach(proveedor => {
             const optionAgregar = document.createElement('option');
@@ -29,6 +30,7 @@ async function cargarProveedoresEnFormularios() {
     }
 }
 
+
 async function guardarNuevoAutomovil() {
     const marca = document.getElementById('marca').value;
     const modelo = document.getElementById('modelo').value;
@@ -41,11 +43,11 @@ async function guardarNuevoAutomovil() {
         return;
     }
 
-    const proveedor = proveedores.find(p => p.id === proveedorId);
-    if (!proveedor) {
-        alert('Proveedor no encontrado');
-        return;
-    }
+   const proveedor = listaProveedores.find(p => p.id === proveedorId);
+   if (!proveedor) {
+       alert('Proveedor no encontrado');
+       return;
+   }
 
     const nuevoAuto = {
         marca,
@@ -99,11 +101,11 @@ async function actualizarAutomovil() {
         return;
     }
 
-    const proveedor = proveedores.find(p => p.id === proveedorId);
-    if (!proveedor) {
-        alert('Proveedor no encontrado');
-        return;
-    }
+   const proveedor = listaProveedores.find(p => p.id === proveedorId);
+   if (!proveedor) {
+       alert('Proveedor no encontrado');
+       return;
+   }
 
     const autoActualizado = {
         id: autoId,
