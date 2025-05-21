@@ -1,6 +1,7 @@
 const BASEURL = 'http://localhost:8080/api/automoviles/';
 const BASEURL_PROVEEDORES = 'http://localhost:8080/api/proveedor/';
 let listaProveedores = []; 
+let automoviles = [];
 
 async function cargarProveedoresEnFormularios() {
     const selectAgregar = document.getElementById('proveedor');
@@ -17,12 +18,12 @@ async function cargarProveedoresEnFormularios() {
         proveedores.forEach(proveedor => {
             const optionAgregar = document.createElement('option');
             optionAgregar.value = proveedor.id;
-            optionAgregar.textContent = proveedor.nombre;
+            optionAgregar.textContent = `${proveedor.nombre} ${proveedor.apellidos}`;
             selectAgregar.appendChild(optionAgregar);
 
             const optionEditar = document.createElement('option');
             optionEditar.value = proveedor.id;
-            optionEditar.textContent = proveedor.nombre;
+            optionEditar.textContent = `${proveedor.nombre} ${proveedor.apellidos}`;
             selectEditar.appendChild(optionEditar);
         });
     } catch (error) {
@@ -292,7 +293,7 @@ async function cargarAutomoviles() {
 
     try {
         const response = await fetch(`${BASEURL}`); 
-        const automoviles = await response.json();
+        automoviles = await response.json(); // Asigna los automóviles a la variable global
         console.log('Automóviles cargados:', automoviles);
         automoviles.forEach(auto => {
             contenedor.appendChild(crearTarjetaAuto(auto));
@@ -302,6 +303,7 @@ async function cargarAutomoviles() {
     } catch (error) {
         console.error('Error al cargar automóviles:', error);
         contenedor.innerHTML = '<p>Error al cargar los automóviles. Intenta de nuevo más tarde.</p>';
+        automoviles = []; // Asegúrate de que automoviles esté vacío en caso de error
     }
 }
 
@@ -337,7 +339,9 @@ function crearTarjetaAuto(auto) {
                     <li class="list-group-item d-flex justify-content-between">
                         <strong>Placa:</strong> <span>${auto.numPlacas}</span>
                     </li>
-               
+                    <li class="list-group-item d-flex justify-content-between">
+                        <strong>Placa:</strong> <span>${auto.proveedor.nombre} ${auto.proveedor.apellidos}</span>
+                    </li>
                 </ul>
                 <div class="d-flex justify-content-between">
                     <button class="btn btn-outline-warning btn-circle" title="Editar" data-bs-toggle="modal" data-bs-target="#editarAutoModal" 
