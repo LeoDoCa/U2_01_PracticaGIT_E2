@@ -109,38 +109,44 @@ async function cargarProveedores() {
     contenedor.innerHTML = '<p class="text-danger">Error al cargar proveedores.</p>';
   }
 }
-
 async function verDetallesProveedor(id) {
   try {
     const proveedorResponse = await fetch(`${BASEURL_PROVEEDORES}${id}`);
     if (!proveedorResponse.ok) throw new Error('No se pudo obtener el proveedor');
+
     const prov = await proveedorResponse.json();
 
     document.getElementById('detalleProvNombre').textContent = prov.nombre;
     document.getElementById('detalleProvEmail').textContent = prov.correo;
     document.getElementById('detalleProvTelefono').textContent = prov.telefono;
 
-    const autosResponse = await fetch(`${BASEURL_PROVEEDORES}${id}/automoviles`); // ajusta esta ruta si es distinta
-    if (!autosResponse.ok) throw new Error('No se pudieron obtener los automóviles del proveedor');
-    const autos = await autosResponse.json();
-
     const lista = document.getElementById('listaAutosProveedor');
     lista.innerHTML = '';
 
-    if (autos.length === 0) {
+    if (!prov.automoviles || prov.automoviles.length === 0) {
       lista.innerHTML = '<li class="list-group-item text-muted">Sin automóviles asociados</li>';
     } else {
-      autos.forEach(auto => {
+      prov.automoviles.forEach(auto => {
         const li = document.createElement('li');
         li.className = 'list-group-item';
-        li.textContent = `${auto.marca} ${auto.modelo} (${auto.placa})`;
+        li.textContent = `${auto.marca} ${auto.modelo} (${auto.numPlacas})`;
         lista.appendChild(li);
       });
     }
+
+    const modalElement = document.getElementById('detallesProveedorModal');
+    const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
+    modal.show();
+
+
   } catch (error) {
+
     console.error('Error al obtener los detalles del proveedor:', error);
+    alert('No se pudo cargar la información del proveedor.');
   }
 }
+
+
 
 
 async function cargarProveedorParaEditar(id) {
@@ -177,7 +183,7 @@ document.getElementById('editarProveedorForm').addEventListener('submit', async 
 
   try {
     const response = await fetch(`${BASEURL_PROVEEDORES}${proveedorActualId}`, {
-      method: 'PUT', 
+      method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
       },
@@ -188,7 +194,7 @@ document.getElementById('editarProveedorForm').addEventListener('submit', async 
       throw new Error(`Error al actualizar proveedor: ${response.statusText}`);
     }
 
-    
+
     const updatedProv = await response.json();
     const provIndex = proveedores.findIndex(p => p.id === proveedorActualId);
     if (provIndex !== -1) {
