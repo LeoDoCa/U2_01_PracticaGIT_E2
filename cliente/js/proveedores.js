@@ -1,38 +1,28 @@
 const BASEURL_PROVEEDORES = 'http://localhost:8080/api/proveedor/';
 
 
-const proveedores = [
-  { id: 1, nombre: 'Juan Pérez', email: 'juanperez@mail.com', telefono: '5522334455' },
-  { id: 2, nombre: 'María Gómez', email: 'mariagomez@mail.com', telefono: '5511223344' }
-];
-
-const automoviles = [
-  { id: 1, marca: 'Toyota', modelo: 'Corolla', placa: 'ABC123', proveedor: { id: 1 } },
-  { id: 2, marca: 'Nissan', modelo: 'Versa', placa: 'XYZ789', proveedor: { id: 1 } },
-  { id: 3, marca: 'Chevrolet', modelo: 'Onix', placa: 'LMN456', proveedor: { id: 2 } }
-];
-
 let proveedorActualId = null;
 
-function validarProveedor(nombre, email, telefono) {
+function validarProveedor(nombre, apellidos, email, telefono) {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const telRegex = /^\d{10}$/;
-  return nombre && emailRegex.test(email) && telRegex.test(telefono);
+  return nombre && apellidos && emailRegex.test(email) && telRegex.test(telefono);
 }
 
 document.getElementById('agregarProveedorForm').addEventListener('submit', async e => {
   e.preventDefault();
 
   const nombre = document.getElementById('provNombre').value.trim();
+  const apellidos = document.getElementById('provApellidos').value.trim();
   const correo = document.getElementById('provEmail').value.trim();
   const telefono = document.getElementById('provTelefono').value.trim();
 
-  if (!validarProveedor(nombre, correo, telefono)) {
-    alert('Datos inválidos. Verifica nombre, correo y teléfono.');
+  if (!validarProveedor(nombre, apellidos, correo, telefono)) {
+    alert('Datos inválidos. Verifica nombre, apellidos, correo y teléfono.');
     return;
   }
 
-  const nuevoProveedor = { nombre, correo, telefono };
+  const nuevoProveedor = { nombre, apellidos, correo, telefono };
 
   try {
     const response = await fetch(`${BASEURL_PROVEEDORES}`, {
@@ -45,8 +35,7 @@ document.getElementById('agregarProveedorForm').addEventListener('submit', async
       throw new Error(`Error al guardar proveedor: ${response.statusText}`);
     }
 
-    const proveedorGuardado = await response.json();
-    proveedores.push(proveedorGuardado);
+    await response.json();
 
     cargarProveedores();
     e.target.reset();
@@ -80,7 +69,7 @@ async function cargarProveedores() {
       div.innerHTML = `
         <div class="card w-100 h-100 border-0 shadow-sm">
           <div class="card-header bg-terrary">
-            <h5 class="card-title mb-0">${prov.nombre}</h5>
+            <h5 class="card-title mb-0">${prov.nombre} ${prov.apellidos}</h5>
           </div>
           <div class="d-flex flex-wrap justify-content- align-items-center p-3">
             <div class="d-flex gap-4 flex-grow-1 flex-wrap">
@@ -109,44 +98,47 @@ async function cargarProveedores() {
     contenedor.innerHTML = '<p class="text-danger">Error al cargar proveedores.</p>';
   }
 }
+
+
 async function verDetallesProveedor(id) {
   try {
     const proveedorResponse = await fetch(`${BASEURL_PROVEEDORES}${id}`);
     if (!proveedorResponse.ok) throw new Error('No se pudo obtener el proveedor');
-
     const prov = await proveedorResponse.json();
 
-    document.getElementById('detalleProvNombre').textContent = prov.nombre;
+    document.getElementById('detalleProvNombre').textContent = `${prov.nombre} ${prov.apellidos}`;
     document.getElementById('detalleProvEmail').textContent = prov.correo;
     document.getElementById('detalleProvTelefono').textContent = prov.telefono;
+
+    const autos = prov.automoviles;
 
     const lista = document.getElementById('listaAutosProveedor');
     lista.innerHTML = '';
 
-    if (!prov.automoviles || prov.automoviles.length === 0) {
+    if (!autos || autos.length === 0) {
       lista.innerHTML = '<li class="list-group-item text-muted">Sin automóviles asociados</li>';
     } else {
-      prov.automoviles.forEach(auto => {
+      autos.forEach(auto => {
         const li = document.createElement('li');
-        li.className = 'list-group-item';
-        li.textContent = `${auto.marca} ${auto.modelo} (${auto.numPlacas})`;
+        li.className = 'list-group-item d-flex justify-content-between align-items-center';
+        
+        const infoAuto = document.createElement('div');
+        infoAuto.innerHTML = `
+          <strong>${auto.marca} ${auto.modelo}</strong>
+          <p class="mb-1 mt-1">Placa: ${auto.numPlacas}</p>
+          <p class="mb-0">Color: ${auto.color || 'N/A'}</p>
+        `;
+        
+        li.appendChild(infoAuto);
         lista.appendChild(li);
       });
     }
-
-    const modalElement = document.getElementById('detallesProveedorModal');
-    const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
-    modal.show();
-
-
   } catch (error) {
-
     console.error('Error al obtener los detalles del proveedor:', error);
-    alert('No se pudo cargar la información del proveedor.');
+    document.getElementById('listaAutosProveedor').innerHTML = 
+      '<li class="list-group-item text-danger">Error al cargar los datos. Intente nuevamente.</li>';
   }
 }
-
-
 
 
 async function cargarProveedorParaEditar(id) {
@@ -159,6 +151,7 @@ async function cargarProveedorParaEditar(id) {
 
     proveedorActualId = id;
     document.getElementById('editProvNombre').value = prov.nombre;
+    document.getElementById('editProvApellidos').value = prov.apellidos;
     document.getElementById('editProvEmail').value = prov.correo;
     document.getElementById('editProvTelefono').value = prov.telefono;
 
@@ -173,11 +166,12 @@ document.getElementById('editarProveedorForm').addEventListener('submit', async 
   e.preventDefault();
 
   const nombre = document.getElementById('editProvNombre').value.trim();
+  const apellidos = document.getElementById('editProvApellidos').value.trim();
   const correo = document.getElementById('editProvEmail').value.trim();
   const telefono = document.getElementById('editProvTelefono').value.trim();
 
-  if (!validarProveedor(nombre, correo, telefono)) {
-    alert('Datos inválidos. Verifica nombre, correo y teléfono.');
+  if (!validarProveedor(nombre, apellidos, correo, telefono)) {
+    alert('Datos inválidos. Verifica nombre, apellidos, correo y teléfono.');
     return;
   }
 
@@ -187,20 +181,15 @@ document.getElementById('editarProveedorForm').addEventListener('submit', async 
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ nombre, correo, telefono }),
+      body: JSON.stringify({ nombre, apellidos, correo, telefono }),
     });
 
     if (!response.ok) {
       throw new Error(`Error al actualizar proveedor: ${response.statusText}`);
     }
 
-
-    const updatedProv = await response.json();
-    const provIndex = proveedores.findIndex(p => p.id === proveedorActualId);
-    if (provIndex !== -1) {
-      proveedores[provIndex] = updatedProv;
-      cargarProveedores();
-    }
+    await response.json();
+    cargarProveedores();
 
     bootstrap.Modal.getInstance(document.getElementById('editarProveedorModal')).hide();
     alert('Proveedor actualizado correctamente');
@@ -212,40 +201,48 @@ document.getElementById('editarProveedorForm').addEventListener('submit', async 
 });
 
 
-function eliminarProveedor(id) {
-  const prov = proveedores.find(p => p.id === id);
-  if (!prov) return;
-
-  document.getElementById('confirmacionMensaje').textContent = `¿Está seguro que desea eliminar al proveedor "${prov.nombre}"?`;
-
-  const confirmarBtn = document.getElementById('confirmarAccionBtn');
-  confirmarBtn.onclick = async () => {
-    try {
-      const response = await fetch(`${BASEURL_PROVEEDORES}${id}`, {
-        method: 'DELETE'
-      });
-
-      if (!response.ok) {
-        throw new Error(`Error al eliminar proveedor: ${response.statusText}`);
-      }
-
-      const index = proveedores.findIndex(p => p.id === id);
-      if (index !== -1) {
-        proveedores.splice(index, 1);
-        cargarProveedores();
-      }
-
-      alert('Proveedor eliminado correctamente');
-    } catch (error) {
-      console.error(error);
-      alert('No se pudo eliminar el proveedor.');
+async function eliminarProveedor(id) {
+  try {
+    const response = await fetch(`${BASEURL_PROVEEDORES}${id}`);
+    if (!response.ok) {
+      throw new Error(`Error al obtener proveedor: ${response.statusText}`);
     }
+    const prov = await response.json();
 
-    bootstrap.Modal.getInstance(document.getElementById('confirmacionModal')).hide();
-  };
+    document.getElementById('confirmacionMensaje').textContent = 
+      `¿Está seguro que desea eliminar al proveedor "${prov.nombre} ${prov.apellidos}"?`;
 
-  const modal = new bootstrap.Modal(document.getElementById('confirmacionModal'));
-  modal.show();
+    const confirmarBtn = document.getElementById('confirmarAccionBtn');
+    
+    const nuevoConfirmarBtn = confirmarBtn.cloneNode(true);
+    confirmarBtn.parentNode.replaceChild(nuevoConfirmarBtn, confirmarBtn);
+    
+    nuevoConfirmarBtn.onclick = async () => {
+      try {
+        const deleteResponse = await fetch(`${BASEURL_PROVEEDORES}${id}`, {
+          method: 'DELETE'
+        });
+
+        if (!deleteResponse.ok) {
+          throw new Error(`Error al eliminar proveedor: ${deleteResponse.statusText}`);
+        }
+
+        cargarProveedores();
+        alert('Proveedor eliminado correctamente');
+      } catch (error) {
+        console.error(error);
+        alert('No se pudo eliminar el proveedor.');
+      }
+
+      bootstrap.Modal.getInstance(document.getElementById('confirmacionModal')).hide();
+    };
+
+    const modal = new bootstrap.Modal(document.getElementById('confirmacionModal'));
+    modal.show();
+  } catch (error) {
+    console.error('Error al preparar eliminación:', error);
+    alert('No se pudo obtener la información del proveedor.');
+  }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
