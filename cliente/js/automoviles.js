@@ -1,7 +1,6 @@
 const BASEURL = 'http://localhost:8080/api/automoviles/';
 const BASEURL_PROVEEDORES = 'http://localhost:8080/api/proveedor/';
-let listaProveedores = [];
-let automoviles = [];
+let listaProveedores = []; 
 
 async function cargarProveedoresEnFormularios() {
     const selectAgregar = document.getElementById('proveedor');
@@ -44,11 +43,11 @@ async function guardarNuevoAutomovil() {
         return;
     }
 
-    const proveedor = listaProveedores.find(p => p.id === proveedorId);
-    if (!proveedor) {
-        alert('Proveedor no encontrado');
-        return;
-    }
+   const proveedor = listaProveedores.find(p => p.id === proveedorId);
+   if (!proveedor) {
+       alert('Proveedor no encontrado');
+       return;
+   }
 
     const nuevoAuto = {
         marca,
@@ -102,11 +101,11 @@ async function actualizarAutomovil() {
         return;
     }
 
-    const proveedor = listaProveedores.find(p => p.id === proveedorId);
-    if (!proveedor) {
-        alert('Proveedor no encontrado');
-        return;
-    }
+   const proveedor = listaProveedores.find(p => p.id === proveedorId);
+   if (!proveedor) {
+       alert('Proveedor no encontrado');
+       return;
+   }
 
     const autoActualizado = {
         id: autoId,
@@ -285,7 +284,6 @@ function inicializarEventos() {
 
         actualizarVistaAutomoviles(autosFiltrados);
     });
-
 }
 
 async function cargarAutomoviles() {
@@ -293,8 +291,8 @@ async function cargarAutomoviles() {
     contenedor.innerHTML = '';
 
     try {
-        const response = await fetch(`${BASEURL}`);
-        automoviles = await response.json();
+        const response = await fetch(`${BASEURL}`); 
+        const automoviles = await response.json();
         console.log('Automóviles cargados:', automoviles);
         automoviles.forEach(auto => {
             contenedor.appendChild(crearTarjetaAuto(auto));
