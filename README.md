@@ -3,7 +3,8 @@
 Agregar la carpeta resources en la carpeta main dentro de src en la parte del backend (servidor)
 Agregar un archivo llamado "application.properties"
 
-Pegar los siguientes datos en dicho archivo
+Pegar los siguientes datos en dicho archivo:
+
 
 spring.application.name=U2_01_PracticaGIT
 
