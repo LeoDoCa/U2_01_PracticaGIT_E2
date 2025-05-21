@@ -313,6 +313,13 @@ document.addEventListener('DOMContentLoaded', function() {
     cargarAutomoviles();
     // Cargar la lista de proveedores en los formularios
     cargarProveedoresEnFormularios();
+    fetch("./navbar.html")
+        .then(response => response.text())
+        .then(data => {
+            document.getElementById("navbar-container").innerHTML = data;
+        })
+        .catch(error => console.error("Error al cargar el navbar:", error));
+
 });
 
 // Función para inicializar todos los eventos
@@ -396,7 +403,7 @@ function crearTarjetaAuto(auto) {
     
     columna.innerHTML = `
         <div class="card h-100 border-0 shadow-sm">
-            <div class="card-header bg-primary text-white">
+            <div class="card-header bg-terrary">
                 <h5 class="card-title mb-0">${auto.marca} ${auto.modelo}</h5>
             </div>
             <div class="card-body">
