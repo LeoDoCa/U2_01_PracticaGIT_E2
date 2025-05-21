@@ -1,7 +1,6 @@
 const BASEURL_PROVEEDORES = 'http://localhost:8080/api/proveedor/';
 
 
-// Datos de prueba
 const proveedores = [
   { id: 1, nombre: 'Juan Pérez', email: 'juanperez@mail.com', telefono: '5522334455' },
   { id: 2, nombre: 'María Gómez', email: 'mariagomez@mail.com', telefono: '5511223344' }
@@ -15,7 +14,6 @@ const automoviles = [
 
 let proveedorActualId = null;
 
-// validaciones
 function validarProveedor(nombre, email, telefono) {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const telRegex = /^\d{10}$/;
@@ -48,7 +46,6 @@ document.getElementById('agregarProveedorForm').addEventListener('submit', async
     }
 
     const proveedorGuardado = await response.json();
-    // Agrega el proveedor guardado al arreglo local (con ID generado por backend)
     proveedores.push(proveedorGuardado);
 
     cargarProveedores();
@@ -115,7 +112,6 @@ async function cargarProveedores() {
 
 async function verDetallesProveedor(id) {
   try {
-    // Obtener datos del proveedor
     const proveedorResponse = await fetch(`${BASEURL_PROVEEDORES}${id}`);
     if (!proveedorResponse.ok) throw new Error('No se pudo obtener el proveedor');
     const prov = await proveedorResponse.json();
@@ -124,7 +120,6 @@ async function verDetallesProveedor(id) {
     document.getElementById('detalleProvEmail').textContent = prov.correo;
     document.getElementById('detalleProvTelefono').textContent = prov.telefono;
 
-    // Obtener autos asociados al proveedor
     const autosResponse = await fetch(`${BASEURL_PROVEEDORES}${id}/automoviles`); // ajusta esta ruta si es distinta
     if (!autosResponse.ok) throw new Error('No se pudieron obtener los automóviles del proveedor');
     const autos = await autosResponse.json();
@@ -247,8 +242,6 @@ function eliminarProveedor(id) {
   modal.show();
 }
 
-
-// carga proveedores al inicio
 document.addEventListener('DOMContentLoaded', () => {
   cargarProveedores();
 });

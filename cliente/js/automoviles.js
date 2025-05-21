@@ -1,6 +1,6 @@
 const BASEURL = 'http://localhost:8080/api/automoviles/';
 const BASEURL_PROVEEDORES = 'http://localhost:8080/api/proveedor/';
-let listaProveedores = []; // Variable global
+let listaProveedores = []; 
 
 async function cargarProveedoresEnFormularios() {
     const selectAgregar = document.getElementById('proveedor');
@@ -12,7 +12,7 @@ async function cargarProveedoresEnFormularios() {
     try {
         const response = await fetch(`${BASEURL_PROVEEDORES}`);
         const proveedores = await response.json();
-        listaProveedores = proveedores; // Guardar en la variable global
+        listaProveedores = proveedores;
 
         proveedores.forEach(proveedor => {
             const optionAgregar = document.createElement('option');
