@@ -1,26 +1,33 @@
-// Función para cargar la lista de proveedores en los formularios
-function cargarProveedoresEnFormularios() {
+const BASEURL = 'http://localhost:8080/api/automoviles/';
+const BASEURL_PROVEEDORES = 'http://localhost:8080/api/proveedor/';
+
+async function cargarProveedoresEnFormularios() {
     const selectAgregar = document.getElementById('proveedor');
     const selectEditar = document.getElementById('editProveedor');
-    
-    // Limpiar opciones existentes excepto la primera predeterminada en agregar
+
+    // Limpia los selects
     selectAgregar.innerHTML = '<option value="" selected disabled>Seleccione un proveedor</option>';
-    selectEditar.innerHTML = '';
-    
-    // Agregar cada proveedor como una opción
-    proveedores.forEach(proveedor => {
-        // Para el formulario de agregar
-        const optionAgregar = document.createElement('option');
-        optionAgregar.value = proveedor.id;
-        optionAgregar.textContent = proveedor.nombre;
-        selectAgregar.appendChild(optionAgregar);
-        
-        // Para el formulario de editar
-        const optionEditar = document.createElement('option');
-        optionEditar.value = proveedor.id;
-        optionEditar.textContent = proveedor.nombre;
-        selectEditar.appendChild(optionEditar);
-    });
+    selectEditar.innerHTML = '<option value="" selected disabled>Seleccione un proveedor</option>';
+
+    try {
+        const response = await fetch(`${BASEURL_PROVEEDORES}`);
+        const proveedores = await response.json();
+console.log(proveedores);
+
+        proveedores.forEach(proveedor => {
+            const optionAgregar = document.createElement('option');
+            optionAgregar.value = proveedor.id;
+            optionAgregar.textContent = proveedor.nombre;
+            selectAgregar.appendChild(optionAgregar);
+
+            const optionEditar = document.createElement('option');
+            optionEditar.value = proveedor.id;
+            optionEditar.textContent = proveedor.nombre;
+            selectEditar.appendChild(optionEditar);
+        });
+    } catch (error) {
+        console.error('Error al cargar proveedores:', error);
+    }
 }
 
 // Función para guardar un nuevo automóvil
@@ -75,117 +82,152 @@ function guardarNuevoAutomovil() {
 }
 
 // Función para actualizar un automóvil existente
-function actualizarAutomovil() {
+async function actualizarAutomovil() {
     // Obtener el ID del automóvil a actualizar
     const autoId = parseInt(document.getElementById('editarAutoForm').dataset.autoId);
     if (isNaN(autoId)) {
         alert('Error: No se ha seleccionado un automóvil');
         return;
     }
-    
+
     // Obtener valores del formulario
     const marca = document.getElementById('editMarca').value;
     const modelo = document.getElementById('editModelo').value;
     const color = document.getElementById('editColor').value;
-    const placa = document.getElementById('editPlaca').value;
+    const numPlacas = document.getElementById('editPlaca').value;
     const proveedorId = parseInt(document.getElementById('editProveedor').value);
-    
+
     // Validación básica
-    if (!marca || !modelo || !color || !placa || isNaN(proveedorId)) {
+    if (!marca || !modelo || !color || !numPlacas || isNaN(proveedorId)) {
         alert('Por favor, complete todos los campos');
         return;
     }
-    
+
     // Buscar el proveedor seleccionado
     const proveedor = proveedores.find(p => p.id === proveedorId);
     if (!proveedor) {
         alert('Proveedor no encontrado');
         return;
     }
-    
-    // Buscar el automóvil a actualizar
-    const autoIndex = automoviles.findIndex(a => a.id === autoId);
-    if (autoIndex === -1) {
-        alert('Automóvil no encontrado');
-        return;
-    }
-    
-    // Actualizar el objeto automóvil
-    automoviles[autoIndex] = {
-        ...automoviles[autoIndex],
+
+    // Construir objeto para actualizar
+    const autoActualizado = {
+        id: autoId,
         marca,
         modelo,
         color,
-        placa,
-        proveedor
+        numPlacas,
+        proveedor  // se envía el objeto proveedor completo
     };
-    
-    // Recargar la vista de automóviles
-    cargarAutomoviles();
-    
-    // Cerrar el modal
-    document.getElementById('editarAutoModal').querySelector('.btn-close').click();
-    
-    // Notificar al usuario
-    alert('Automóvil actualizado correctamente');
+
+    try {
+        const response = await fetch(`${BASEURL}${autoId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(autoActualizado)
+        });
+
+        if (!response.ok) {
+            throw new Error('No se pudo actualizar el automóvil');
+        }
+
+        // Recargar lista de autos
+        await cargarAutomoviles();
+
+        // Cerrar el modal
+        document.getElementById('editarAutoModal').querySelector('.btn-close').click();
+
+        alert('Automóvil actualizado correctamente');
+
+    } catch (error) {
+        console.error('Error al actualizar automóvil:', error);
+        alert('Error al actualizar el automóvil');
+    }
 }
 
-// Función para eliminar un automóvil
-function eliminarAutomovil() {
-    // Obtener el ID del automóvil a eliminar
+async function eliminarAutomovil() {
     const autoId = parseInt(document.getElementById('eliminarAutoModal').dataset.autoId);
     if (isNaN(autoId)) {
         alert('Error: No se ha seleccionado un automóvil');
         return;
     }
-    
-    // Buscar el índice del automóvil
-    const autoIndex = automoviles.findIndex(a => a.id === autoId);
-    if (autoIndex === -1) {
-        alert('Automóvil no encontrado');
-        return;
+
+    try {
+        const response = await fetch(`${BASEURL}${autoId}`, {
+            method: 'DELETE'
+        });
+
+        if (!response.ok) {
+            throw new Error('Error al eliminar el automóvil');
+        }
+
+        // Recargar la vista de automóviles
+        await cargarAutomoviles(); // Asumiendo que esta función ya hace fetch de la lista actualizada
+
+        // Cerrar el modal
+        document.getElementById('eliminarAutoModal').querySelector('.btn-close').click();
+
+        // Notificar al usuario
+        alert('Automóvil eliminado correctamente');
+        
+    } catch (error) {
+        console.error('Error al eliminar el automóvil:', error);
+        alert('Hubo un error al intentar eliminar el automóvil.');
     }
-    
-    // Eliminar el automóvil
-    automoviles.splice(autoIndex, 1);
-    
-    // Recargar la vista de automóviles
-    cargarAutomoviles();
-    
-    // Cerrar el modal
-    document.getElementById('eliminarAutoModal').querySelector('.btn-close').click();
-    
-    // Notificar al usuario
-    alert('Automóvil eliminado correctamente');
-}// Función para cargar datos en el modal de edición
-function cargarDatosParaEditar(autoId) {
-    // Buscar el automóvil por ID
-    const auto = automoviles.find(a => a.id === autoId);
-    if (!auto) return;
-    
-    // Cargar los datos en el formulario de edición
-    document.getElementById('editMarca').value = auto.marca;
-    document.getElementById('editModelo').value = auto.modelo;
-    document.getElementById('editColor').value = auto.color;
-    document.getElementById('editPlaca').value = auto.placa;
-    document.getElementById('editProveedor').value = auto.proveedor.id;
-    
-    // Guardar el ID del auto actual para la actualización
-    document.getElementById('editarAutoForm').dataset.autoId = autoId;
 }
 
-// Función para cargar datos en el modal de eliminación
-function cargarDatosParaEliminar(autoId) {
-    // Buscar el automóvil por ID
-    const auto = automoviles.find(a => a.id === autoId);
-    if (!auto) return;
-    
-    // Mostrar información del auto a eliminar
-    document.getElementById('deleteModelText').textContent = `${auto.marca} ${auto.modelo}`;
-    document.getElementById('deletePlacaText').textContent = auto.placa;
-    
-    // Guardar el ID del auto actual para la eliminación
-    document.getElementById('eliminarAutoModal').dataset.autoId = autoId;
+
+async function cargarDatosParaEditar(autoId) {
+    try {
+        const response = await fetch(`${BASEURL}${autoId}`);
+        if (!response.ok) {
+            throw new Error('No se pudo obtener el automóvil');
+        }
+
+        const auto = await response.json();
+
+        // Cargar los datos en el formulario de edición
+        document.getElementById('editMarca').value = auto.marca;
+        document.getElementById('editModelo').value = auto.modelo;
+        document.getElementById('editColor').value = auto.color;
+        document.getElementById('editPlaca').value = auto.numPlacas;
+
+        // Verifica si el objeto auto.proveedor existe y tiene ID
+        if (auto.proveedor && auto.proveedor.id) {
+            document.getElementById('editProveedor').value = auto.proveedor.id;
+        }
+
+        // Guardar el ID del auto actual para la actualización
+        document.getElementById('editarAutoForm').dataset.autoId = autoId;
+
+    } catch (error) {
+        console.error('Error al cargar datos del automóvil:', error);
+        alert('Error al cargar los datos del automóvil para editar');
+    }
+}
+
+
+async function cargarDatosParaEliminar(autoId) {
+    try {
+        const response = await fetch(`${BASEURL}${autoId}`);
+        if (!response.ok) {
+            throw new Error('No se pudo obtener la información del auto');
+        }
+
+        const auto = await response.json();
+
+        // Mostrar información del auto a eliminar
+        document.getElementById('deleteModelText').textContent = `${auto.marca} ${auto.modelo}`;
+        document.getElementById('deletePlacaText').textContent = auto.numPlacas;
+
+        // Guardar el ID del auto actual para la eliminación
+        document.getElementById('eliminarAutoModal').dataset.autoId = autoId;
+
+    } catch (error) {
+        console.error('Error al cargar los datos del automóvil:', error);
+    }
 }
 
 // Función para cargar detalles del automóvil en el modal
@@ -204,7 +246,11 @@ function cargarDetallesAuto(autoId) {
     document.getElementById('detalleProveedorDireccion').textContent = auto.proveedor.direccion;
     document.getElementById('detalleProveedorTelefono').textContent = auto.proveedor.telefono;
     document.getElementById('detalleProveedorEmail').textContent = auto.proveedor.email;
-}// Datos de ejemplo
+}
+
+
+// Datos de ejemplo
+
 const automoviles = [
     {
         id: 1,
@@ -302,18 +348,25 @@ function inicializarEventos() {
 }
 
 // Función para cargar automóviles en la página
-function cargarAutomoviles() {
-    // Limpiar el contenedor de automóviles
+async function cargarAutomoviles() {
     const contenedor = document.getElementById('contenedorAutos');
     contenedor.innerHTML = '';
-    
-    // Cargar cada automóvil en el contenedor
-    automoviles.forEach(auto => {
-        contenedor.appendChild(crearTarjetaAuto(auto));
-    });
-    
-    console.log('Automóviles cargados:', automoviles.length);
+
+    try {
+        const response = await fetch(`${BASEURL}`); // Asegúrate de definir esta constante
+        const automoviles = await response.json();
+        console.log('Automóviles cargados:', automoviles);
+        automoviles.forEach(auto => {
+            contenedor.appendChild(crearTarjetaAuto(auto));
+        });
+
+        console.log('Automóviles cargados:', automoviles.length);
+    } catch (error) {
+        console.error('Error al cargar automóviles:', error);
+        contenedor.innerHTML = '<p>Error al cargar los automóviles. Intenta de nuevo más tarde.</p>';
+    }
 }
+
 
 // Función para actualizar la vista de automóviles según el filtro
 function actualizarVistaAutomoviles(autos) {
@@ -349,11 +402,9 @@ function crearTarjetaAuto(auto) {
             <div class="card-body">
                 <ul class="list-group list-group-flush mb-3">
                     <li class="list-group-item d-flex justify-content-between">
-                        <strong>Placa:</strong> <span>${auto.placa}</span>
+                        <strong>Placa:</strong> <span>${auto.numPlacas}</span>
                     </li>
-                    <li class="list-group-item d-flex justify-content-between">
-                        <strong>Proveedor:</strong> <span>${auto.proveedor.nombre}</span>
-                    </li>
+               
                 </ul>
                 <div class="d-flex justify-content-between">
                     <button class="btn btn-outline-warning btn-circle" title="Editar" data-bs-toggle="modal" data-bs-target="#editarAutoModal" 
