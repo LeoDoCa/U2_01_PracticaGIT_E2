@@ -31,8 +31,16 @@ public class ProveedorService {
         proveedorRepository.deleteById(id);
     }
 
-    public Proveedor update(Proveedor proveedor) {
-        return proveedorRepository.save(proveedor);
+    public Proveedor update(Proveedor proveedor, Long id) {
+        Proveedor existingProveedor = proveedorRepository.findById(id).orElse(null);
+        if (existingProveedor != null) {
+            existingProveedor.setNombre(proveedor.getNombre());
+            existingProveedor.setApellidos(proveedor.getApellidos());
+            existingProveedor.setTelefono(proveedor.getTelefono());
+            existingProveedor.setCorreo(proveedor.getCorreo());
+            return proveedorRepository.save(existingProveedor);
+        }
+        return null;
     }
 
     public Proveedor findByNombre(String nombre) {
