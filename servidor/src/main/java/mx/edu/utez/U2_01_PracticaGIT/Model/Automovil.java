@@ -1,8 +1,7 @@
 package mx.edu.utez.U2_01_PracticaGIT.Model;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
-import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -29,8 +28,8 @@ public class Automovil {
     @Column(nullable = false)
     private String numPlacas;
 
-    @JsonBackReference
-    @ManyToOne(fetch = FetchType.LAZY)
+    @JsonIgnoreProperties({"automoviles"})
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "id_proveedor", nullable = false)
     private Proveedor proveedor;
 
