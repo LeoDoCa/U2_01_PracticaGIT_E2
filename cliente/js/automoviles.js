@@ -340,7 +340,7 @@ function crearTarjetaAuto(auto) {
                         <strong>Placa:</strong> <span>${auto.numPlacas}</span>
                     </li>
                     <li class="list-group-item d-flex justify-content-between">
-                        <strong>Placa:</strong> <span>${auto.proveedor.nombre} ${auto.proveedor.apellidos}</span>
+                        <strong>Proveedor:</strong> <span>${auto.proveedor.nombre} ${auto.proveedor.apellidos}</span>
                     </li>
                 </ul>
                 <div class="d-flex justify-content-between">
